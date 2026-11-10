@@ -1,4 +1,4 @@
-"""UNDERCUT API."""
+"""PARALLAX API."""
 from __future__ import annotations
 
 import asyncio
@@ -31,7 +31,7 @@ async def lifespan(_: FastAPI):
         s.stop()
 
 
-app = FastAPI(title="UNDERCUT", version="0.1.0", lifespan=lifespan,
+app = FastAPI(title="Parallax", version="0.1.0", lifespan=lifespan,
               description="An AI pit wall that races its own strategy against reality.")
 app.add_middleware(CORSMiddleware, allow_origins=os.getenv("ALLOWED_ORIGINS", "*").split(","),
                    allow_methods=["*"], allow_headers=["*"])

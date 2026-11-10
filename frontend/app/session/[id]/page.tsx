@@ -9,6 +9,7 @@ import { PaceChart, TyreModelChart } from "@/components/ModelPanels";
 import { RadioFeed } from "@/components/RadioFeed";
 import { EngineerChat } from "@/components/EngineerChat";
 import { signed } from "@/lib/format";
+import { ParallaxMark, Wordmark } from "@/components/Logo";
 
 const STATUS_TEXT = { GREEN: "Green", YELLOW: "Yellow", VSC: "Virtual safety car", SC: "Safety car", RED: "Red flag" };
 
@@ -31,11 +32,15 @@ export default function SessionPage() {
   return (
     <div className="dash">
       <header className="topbar">
-        <Link href="/" className="brand" style={{ margin: 0, color: "inherit", textDecoration: "none" }}>
-          <span className="brand-mark" aria-hidden />
-          UNDERCUT
+        <Link href="/" className="px-brand" aria-label="Parallax home">
+          <Wordmark size={20} />
         </Link>
         <span className="event">{s.race?.event ?? "Connecting…"}</span>
+        {s.race?.source === "synthetic" && (
+          <span className="sim-note" title="Real 2026 driver and team names; the race and its results are invented">
+            Simulated
+          </span>
+        )}
         {f && (
           <>
             <span className="lapcount num">
@@ -72,7 +77,10 @@ export default function SessionPage() {
 
       {!f ? (
         <main className="col" style={{ alignItems: "center", justifyContent: "center" }}>
-          <p className="empty">Waiting for lights out…</p>
+          <div className="loading-state" role="status">
+            <ParallaxMark size={64} motion="loop" title="Loading" />
+            Waiting for lights out…
+          </div>
         </main>
       ) : (
         <main className="grid">
@@ -84,9 +92,9 @@ export default function SessionPage() {
             {s.summary && (
               <div className="finish" role="status">
                 <strong>
-                  Chequered flag. AI {s.summary.driver} finished{" "}
-                  {s.summary.final_delta == null ? "" : `${signed(-s.summary.final_delta)}s vs the real car, `}
-                  P{s.summary.shadow_position ?? "–"} against a real P{s.summary.actual_position ?? "–"}.
+                  {s.summary.retired
+                    ? `Real ${s.summary.driver} retired after lap ${s.summary.last_lap ?? "?"}. Up to then the AI car was ${Math.abs(s.summary.final_delta ?? 0).toFixed(1)}s ${(s.summary.final_delta ?? 0) <= 0 ? "ahead" : "behind"}.`
+                    : `Chequered flag. AI ${s.summary.driver} finished ${signed(s.summary.final_delta == null ? null : -s.summary.final_delta)}s vs the real car, P${s.summary.shadow_position ?? "–"} against a real P${s.summary.actual_position ?? "–"}.`}
                 </strong>
                 AI stops: {s.summary.shadow_stops.map((x) => `lap ${x.lap} ${x.compound.toLowerCase()}`).join(", ") || "none"}.
                 Real stops: {s.summary.actual_stops.map((x) => `lap ${x.lap} ${x.compound.toLowerCase()}`).join(", ") || "none"}.

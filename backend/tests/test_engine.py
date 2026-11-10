@@ -35,7 +35,7 @@ def test_pit_loss_estimate(race):
 
 def test_optimizer_respects_two_compound_rule(race):
     model = TyreModel.fit(race)
-    plans = best_plans(model, "CAL", 1, "MEDIUM", 1, {"MEDIUM"}, 22.0)
+    plans = best_plans(model, "LEC", 1, "MEDIUM", 1, {"MEDIUM"}, 22.0)
     assert plans
     for p in plans:
         assert p.stops, "a dry race cannot be run on one compound"
@@ -46,23 +46,23 @@ def test_optimizer_respects_two_compound_rule(race):
 
 def test_evaluate_plan_matches_optimizer(race):
     model = TyreModel.fit(race)
-    best = best_plans(model, "CAL", 10, "MEDIUM", 10, {"MEDIUM"}, 22.0)[0]
-    t = evaluate_plan(model, "CAL", 10, "MEDIUM", 10, best.stops, 22.0)
+    best = best_plans(model, "LEC", 10, "MEDIUM", 10, {"MEDIUM"}, 22.0)[0]
+    t = evaluate_plan(model, "LEC", 10, "MEDIUM", 10, best.stops, 22.0)
     assert t == pytest.approx(best.time, abs=1e-6)
 
 
 def test_shadow_with_real_strategy_tracks_reality(race):
     """Re-running the driver's own strategy should land close to the real result."""
-    probe = RaceSession(race, "CAL")
+    probe = RaceSession(race, "LEC")
     actual = [(s["lap"], s["compound"]) for s in probe.shadow.actual_stops()]
-    s = RaceSession(race, "CAL", mode="fixed", fixed_stops=actual)
+    s = RaceSession(race, "LEC", mode="fixed", fixed_stops=actual)
     while not s.finished:
         s.advance()
     assert abs(s.summary["final_delta"]) < 4.0
 
 
 def test_auto_session_runs_full_race(race):
-    s = RaceSession(race, "ARN")
+    s = RaceSession(race, "NOR")
     while not s.finished:
         s.advance()
     assert len(s.frames) == race.total_laps
@@ -79,7 +79,7 @@ def test_leaderboard_handles_retirement(race):
 
 
 def test_engineer_answers(race):
-    s = RaceSession(race, "CAL")
+    s = RaceSession(race, "LEC")
     for _ in range(34):
         s.advance()
 
@@ -89,6 +89,15 @@ def test_engineer_answers(race):
     assert "leads" in ask("who's leading?")
     assert "Safety Car" in ask("is there a safety car?") or "green" in ask("is there a safety car?").lower()
     assert "Plan" in ask("what's our plan?")
-    assert "Shadow CAL" in ask("how is the ghost doing?")
-    assert "P" in ask("where is DUV?")
+    assert "Shadow LEC" in ask("how is the ghost doing?")
+    assert "P" in ask("where is hamilton?")
     assert "to go" in ask("how many laps left")
+
+
+def test_engineer_ignores_everyday_words_that_look_like_codes(race):
+    s = RaceSession(race, "LEC")
+    for _ in range(10):
+        s.advance()
+    from app.engine.engineer import _drivers_in
+    assert _drivers_in("who had the fastest lap per stint?", s) == []
+    assert _drivers_in("gap to PER and ver", s) == ["VER", "PER"] or set(_drivers_in("gap to PER and ver", s)) == {"VER", "PER"}

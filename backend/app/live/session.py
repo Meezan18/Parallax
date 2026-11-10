@@ -192,6 +192,8 @@ class RaceSession:
             "actual_position": last["focus"]["real"]["position"] if last else None,
             "shadow_stops": [{"lap": k, "compound": c} for k, c in self.shadow.car.pits],
             "actual_stops": self.shadow.actual_stops(),
+            "retired": self.shadow.car.retired,
+            "last_lap": last["lap"] if last else None,
         }
         if self.on_finish:
             try:
