@@ -56,6 +56,7 @@ class RaceData:
     laps: list[Lap]
     source: str = "fastf1"
     race_id: Optional[int] = None
+    track: Optional[list[list[float]]] = None   # circuit outline, normalised to 0..1, starts at the finish line
     _index: Optional[dict] = field(default=None, init=False, repr=False, compare=False)
     _status: Optional[dict] = field(default=None, init=False, repr=False, compare=False)
     _field_median: dict = field(default_factory=dict, init=False, repr=False, compare=False)
@@ -108,4 +109,26 @@ class RaceData:
             "total_laps": self.total_laps,
             "source": self.source,
             "drivers": [d.to_dict() for d in self.drivers],
+            "track": self.track,
         }
+
+
+def normalise_track(xs: list[float], ys: list[float], points: int = 360) -> list[list[float]]:
+    """Resample a closed outline to evenly spaced points and fit it into a unit box."""
+    import numpy as np
+
+    x, y = np.asarray(xs, float), np.asarray(ys, float)
+    if x[0] != x[-1] or y[0] != y[-1]:
+        x, y = np.append(x, x[0]), np.append(y, y[0])
+    seg = np.hypot(np.diff(x), np.diff(y))
+    dist = np.concatenate([[0.0], np.cumsum(seg)])
+    target = np.linspace(0, dist[-1], points, endpoint=False)
+    rx, ry = np.interp(target, dist, x), np.interp(target, dist, y)
+    span = max(rx.max() - rx.min(), ry.max() - ry.min()) or 1.0
+    rx = (rx - rx.min()) / span
+    ry = (ry - ry.min()) / span
+    # centre within the unit box, flip y so north is up on screen
+    rx += (1 - (rx.max() - rx.min())) / 2
+    ry = 1 - ry
+    ry -= (ry.min() - (1 - (ry.max() - ry.min())) / 2)
+    return [[round(float(a), 4), round(float(b), 4)] for a, b in zip(rx, ry)]

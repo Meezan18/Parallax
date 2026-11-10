@@ -37,6 +37,7 @@ class RaceRow(Base):
     circuit: Mapped[str] = mapped_column(String(120))
     total_laps: Mapped[int] = mapped_column(Integer)
     source: Mapped[str] = mapped_column(String(20))
+    track: Mapped[list | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

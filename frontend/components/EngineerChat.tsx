@@ -20,17 +20,18 @@ export function EngineerChat({ chat, onAsk, disabled }: { chat: ChatEntry[]; onA
   };
 
   return (
-    <div className="chat">
-      <h2 className="section-title">
-        Ask the engineer <small>answers from live race data</small>
-      </h2>
+    <section className="panel chat" aria-label="Ask the race engineer">
+      <header className="panel-head">
+        <h2>Race engineer</h2>
+        <span className="panel-sub">Answers from live data</span>
+      </header>
       <div className="chat-log" ref={log}>
         {chat.length === 0 && <p className="empty">Ask about positions, gaps, tyres, the safety car or the plan.</p>}
         {chat.map((c, i) => (
           <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <div className="chat-q">{c.question}</div>
             <div className="chat-a">
-              <div className="meta">Lap {c.lap}</div>
+              <div className="chat-meta num">Lap {c.lap}</div>
               {c.answer}
             </div>
           </div>
@@ -60,6 +61,6 @@ export function EngineerChat({ chat, onAsk, disabled }: { chat: ChatEntry[]; onA
           Ask
         </button>
       </form>
-    </div>
+    </section>
   );
 }

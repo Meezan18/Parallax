@@ -171,6 +171,7 @@ class RaceSession:
                     "position": self.shadow.virtual_position(n),
                     "delta": round(delta, 3) if delta is not None else None,
                     "active": n > self.branch_lap,
+                    "gap_to_leader": self._shadow_gap_to_leader(n),
                 },
             },
             "calls": [c.to_dict() for c in calls],
@@ -178,6 +179,15 @@ class RaceSession:
             "undercut": self.assessment.undercut if self.assessment else None,
             "model": {**self.model.to_dict(), "curves": self.model.curves(), "pit_loss": round(self.pit_loss, 2)},
         }
+
+    def _shadow_gap_to_leader(self, n: int) -> Optional[float]:
+        if self.shadow.car.laps_done != n:
+            return None
+        times = [l[n].race_time for d, l in self.race.index().items()
+                 if d != self.driver and n in l and l[n].race_time is not None]
+        if not times:
+            return None
+        return round(self.shadow.car.race_time - min(min(times), self.shadow.car.race_time), 3)
 
     def _finish(self) -> None:
         self.finished = True
