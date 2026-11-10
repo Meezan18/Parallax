@@ -12,7 +12,7 @@ _memory: dict[int, RaceData] = {}
 
 def save_race(db: Session, race: RaceData) -> int:
     row = RaceRow(year=race.year, round=race.round, event=race.event, circuit=race.circuit,
-                  total_laps=race.total_laps, source=race.source)
+                  total_laps=race.total_laps, source=race.source, track=race.track)
     db.add(row)
     db.flush()
     db.add_all(DriverRow(race_id=row.id, **d.to_dict()) for d in race.drivers)
@@ -37,6 +37,7 @@ def get_race(db: Session, race_id: int) -> RaceData | None:
             for l in db.scalars(select(LapRow).where(LapRow.race_id == race_id))]
     race = RaceData(year=row.year, round=row.round, event=row.event, circuit=row.circuit,
                     total_laps=row.total_laps, drivers=drivers, laps=laps, source=row.source, race_id=row.id)
+    race.track = row.track
     _memory[race_id] = race
     return race
 

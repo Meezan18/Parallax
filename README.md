@@ -8,6 +8,9 @@ Pick a Grand Prix and a driver. Parallax replays the race lap by lap from real F
 
 You see, in real time:
 
+- **A live track map.** The real circuit outline (from FastF1 position data), with every car gliding round it at 60fps and the AI car in purple with a light trail. Cars are interpolated between laps, so the race never jumps.
+
+- **A "BOX BOX" moment** that sweeps across the map whenever the AI calls a stop, plus a timing tower whose rows slide past each other on overtakes.
 - **Pit-wall radio calls.** "BOX BOX. Hards. Rejoin P6, 1.4s behind NOR." Also: pit windows, undercut opportunities and threats, and cheap stops under a safety car or VSC.
 - **The shadow delta.** How many seconds the AI's strategy has gained or lost against the real one, lap by lap, and where the shadow car would be running in the order.
 - **A tyre model that learns during the race.** Degradation per compound is refitted every lap from clean laps only.

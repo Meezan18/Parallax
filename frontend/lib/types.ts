@@ -18,6 +18,7 @@ export interface RaceSummary {
   total_laps: number;
   source: string;
   drivers: DriverInfo[];
+  track?: number[][] | null;
 }
 
 export interface EventInfo {
@@ -102,6 +103,7 @@ export interface Frame {
       position: number | null;
       delta: number | null;
       active: boolean;
+      gap_to_leader: number | null;
     };
   };
   calls: Call[];

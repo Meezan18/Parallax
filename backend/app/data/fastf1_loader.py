@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 import os
 
-from .schemas import Driver, Lap, RaceData
+from .schemas import Driver, Lap, RaceData, normalise_track
 
 CACHE_DIR = os.getenv("FASTF1_CACHE", os.path.join(os.path.dirname(__file__), "..", "..", ".fastf1_cache"))
 
@@ -62,7 +62,8 @@ def list_events(year: int) -> list[dict]:
 def load_race(year: int, round_number: int) -> RaceData:
     fastf1 = _enable_cache()
     session = fastf1.get_session(year, round_number, "R")
-    session.load(laps=True, telemetry=False, weather=False, messages=False)
+    # telemetry=True brings position data, which gives us the real circuit outline for the track map
+    session.load(laps=True, telemetry=True, weather=False, messages=False)
     try:
         laps_df = session.laps
     except Exception as exc:  # FastF1 raises DataNotLoadedError when the download failed
@@ -110,6 +111,7 @@ def load_race(year: int, round_number: int) -> RaceData:
         ))
 
     fill_missing_race_times(laps)
+    track = circuit_outline(session)
     total = getattr(session, "total_laps", None) or int(laps_df["LapNumber"].max())
     return RaceData(
         year=year,
@@ -120,6 +122,7 @@ def load_race(year: int, round_number: int) -> RaceData:
         drivers=drivers,
         laps=laps,
         source="fastf1",
+        track=track,
     )
 
 
@@ -138,3 +141,20 @@ def fill_missing_race_times(laps: list[Lap]) -> None:
                 l.lap_time = l.race_time - prev
             if l.race_time is not None:
                 prev = l.race_time
+
+
+def circuit_outline(session) -> list[list[float]] | None:
+    """Circuit shape from the fastest lap's position data, rotated the way F1 graphics show it."""
+    try:
+        import numpy as np
+        pos = session.laps.pick_fastest().get_pos_data()
+        x, y = pos["X"].to_numpy(float), pos["Y"].to_numpy(float)
+        try:
+            angle = np.deg2rad(float(session.get_circuit_info().rotation))
+        except Exception:
+            angle = 0.0
+        rx = x * np.cos(angle) - y * np.sin(angle)
+        ry = x * np.sin(angle) + y * np.cos(angle)
+        return normalise_track(list(rx), list(ry))
+    except Exception:
+        return None  # the map falls back to a generic outline

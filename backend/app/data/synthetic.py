@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import random
 
-from .schemas import Driver, Lap, RaceData
+from .schemas import Driver, Lap, RaceData, normalise_track
 
 # The 2026 grid. Pace order is shuffled by the seed, so results are invented and imply
 # nothing about real performance. Team colours are approximations.
@@ -140,4 +140,17 @@ def generate_demo_race(seed: int = 11, total_laps: int = 56) -> RaceData:
         laps.extend(this_lap.values())
 
     return RaceData(year=2026, round=0, event="Parallax Grand Prix (simulated)", circuit="Simulated circuit",
-                    total_laps=T, drivers=drivers, laps=laps, source="synthetic")
+                    total_laps=T, drivers=drivers, laps=laps, source="synthetic", track=simulated_track())
+
+
+def simulated_track() -> list[list[float]]:
+    """An invented circuit: a long main straight, a hairpin, and a flowing infield."""
+    import math
+    xs, ys = [], []
+    n = 720
+    for i in range(n):
+        t = 2 * math.pi * i / n
+        r = 1 + 0.28 * math.sin(2 * t + 0.4) + 0.12 * math.cos(3 * t) + 0.06 * math.sin(5 * t + 1.1)
+        xs.append(1.45 * r * math.cos(t))
+        ys.append(r * math.sin(t))
+    return normalise_track(xs, ys)
