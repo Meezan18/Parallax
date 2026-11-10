@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+*.db
+.fastf1_cache/
+node_modules/
+.next/
+next-env.d.ts
+.env
+.DS_Store
