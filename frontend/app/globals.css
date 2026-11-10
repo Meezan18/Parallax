@@ -59,7 +59,6 @@ button, input, select { font: inherit; color: inherit; }
 .pitch h1 .ghost-line { color: var(--shadow); display: block; }
 .pitch p { color: var(--muted); max-width: 46ch; margin: 0 0 16px; font-size: 17px; }
 .brand { font-family: var(--font-cond); font-weight: 600; font-size: 20px; margin-bottom: 40px; display: flex; gap: 10px; align-items: center; }
-.brand-mark { width: 26px; height: 14px; border-radius: 2px; background: linear-gradient(90deg, var(--text) 50%, var(--shadow) 50%); }
 
 .panel {
   background: var(--carbon);
@@ -233,3 +232,53 @@ button, input, select { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* ---------- logo ---------- */
+.px-mark { display: block; overflow: visible; flex: none; }
+.px-layer--front { fill: var(--text); }
+.px-layer--mid { fill: var(--shadow); transform: translateX(18px); }
+.px-layer--far { fill: var(--shadow); opacity: 0.38; transform: translateX(36px); }
+
+/* intro: the AI layers slide out from behind the real one at different speeds */
+.px-mark--intro .px-layer--mid { animation: px-mid 1.1s cubic-bezier(0.2, 0.9, 0.1, 1) 0.25s both; }
+.px-mark--intro .px-layer--far { animation: px-far 1.5s cubic-bezier(0.2, 0.9, 0.1, 1) 0.25s both; }
+@keyframes px-mid { from { transform: translateX(0); } to { transform: translateX(18px); } }
+@keyframes px-far { from { transform: translateX(0); opacity: 0; } to { transform: translateX(36px); opacity: 0.38; } }
+
+/* loader: the layers breathe apart and back together */
+.px-mark--loop .px-layer--mid { animation: px-loop-mid 1.6s ease-in-out infinite alternate; }
+.px-mark--loop .px-layer--far { animation: px-loop-far 1.6s ease-in-out infinite alternate; }
+@keyframes px-loop-mid { from { transform: translateX(2px); } to { transform: translateX(18px); } }
+@keyframes px-loop-far { from { transform: translateX(4px); } to { transform: translateX(36px); } }
+
+.px-brand { display: inline-flex; align-items: center; gap: 0.5em; font-family: var(--font-cond); font-weight: 700; line-height: 1; color: inherit; text-decoration: none; }
+.px-word { letter-spacing: 0.06em; }
+
+.intro {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+  background: radial-gradient(ellipse at 50% 55%, #222c3b 0%, var(--asphalt) 70%);
+  cursor: pointer; transition: opacity 0.45s ease;
+}
+.intro--leaving { opacity: 0; pointer-events: none; }
+.intro-inner { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.intro-word {
+  font-family: var(--font-cond); font-weight: 700; font-size: clamp(44px, 8vw, 84px);
+  letter-spacing: 0.32em; margin-right: -0.32em; line-height: 1;
+  animation: px-word 1.1s cubic-bezier(0.2, 0.9, 0.1, 1) 0.7s both;
+}
+@keyframes px-word {
+  from { clip-path: inset(0 100% 0 0); letter-spacing: 0.6em; margin-right: -0.6em; }
+  to { clip-path: inset(0 0 0 0); letter-spacing: 0.32em; margin-right: -0.32em; }
+}
+.intro-tag { color: var(--muted); font-size: 17px; animation: px-fade 0.6s ease 1.5s both; }
+@keyframes px-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.loading-state { display: flex; flex-direction: column; align-items: center; gap: 18px; color: var(--muted); }
+.sim-note { font-size: 13px; color: var(--sc); border: 1px solid rgba(255, 176, 32, 0.4); border-radius: var(--r-sm); padding: 3px 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .px-mark--intro .px-layer, .px-mark--loop .px-layer, .intro-word, .intro-tag { animation: none !important; }
+  .px-mark--loop .px-layer--mid { transform: translateX(18px); }
+}
+.versus .h { white-space: nowrap; }
+.topbar .event { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 32vw; }

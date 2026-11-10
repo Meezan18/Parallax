@@ -32,13 +32,19 @@ HELP = ("Try: \"who's leading?\", \"is there a safety car?\", \"gap to CAL\", \"
         "\"who has pitted?\", \"laps left\".")
 
 
+# three-letter codes that are also everyday words only count when typed in capitals
+AMBIGUOUS_CODES = {"PER", "HAD", "NOR", "GAS", "ANT", "LAW", "BOT", "COL", "LIN", "STR", "SAI", "HAM"}
+
+
 def _drivers_in(text: str, ctx: EngineerContext) -> list[str]:
     found = []
     words = re.findall(r"[a-zA-Z]+", text)
     lower = text.lower()
     for d in ctx.race.drivers:
         last = d.full_name.split()[-1].lower()
-        if any(w.upper() == d.abbr for w in words if len(w) == 3) or re.search(rf"\b{re.escape(last)}\b", lower):
+        code_hit = any(w == d.abbr or (w.upper() == d.abbr and d.abbr not in AMBIGUOUS_CODES)
+                       for w in words if len(w) == 3)
+        if code_hit or re.search(rf"\b{re.escape(last)}\b", lower):
             found.append(d.abbr)
     return found
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
+import { Wordmark } from "@/components/Logo";
 import type { Compound, EventInfo, RaceSummary, StopInfo } from "@/lib/types";
 
 const YEARS = Array.from({ length: new Date().getFullYear() - 2018 + 1 }, (_, i) => 2018 + i).reverse();
@@ -51,7 +52,7 @@ export default function SetupPage() {
     setError(null);
     setRace(null);
     setDriver(null);
-    setBusy(source === "demo" ? "Generating the demo race…" : "Downloading timing data. The first load of a race takes about a minute…");
+    setBusy(source === "demo" ? "Generating the simulated race…" : "Downloading timing data. The first load of a race takes about a minute…");
     try {
       const r = await api.loadRace(source === "demo" ? { demo: true } : { year, round: round ?? undefined });
       setRace(r);
@@ -88,15 +89,14 @@ export default function SetupPage() {
     <main className="setup">
       <section className="pitch">
         <div className="brand">
-          <span className="brand-mark" aria-hidden />
-          UNDERCUT
+          <Wordmark size={22} />
         </div>
         <h1>
           The real race.
           <span className="ghost-line">A second car, run by the AI.</span>
         </h1>
         <p>
-          Pick a Grand Prix and a driver. UNDERCUT replays the race lap by lap and races a shadow version of that
+          Pick a Grand Prix and a driver. Parallax replays the race lap by lap and races a shadow version of that
           driver alongside it, making its own pit calls from what it has seen so far.
         </p>
         <p>
@@ -108,10 +108,13 @@ export default function SetupPage() {
       <section className="panel" aria-label="Session setup">
         <div className="step">
           <h2>Race</h2>
-          <p className="hint">Real races use FastF1 timing data. The demo race is synthetic and works offline.</p>
+          <p className="hint">
+            Real races use FastF1 timing data. The simulated race uses the 2026 grid with invented results and works
+            offline.
+          </p>
           <div className="segmented" role="group" aria-label="Race source">
             <button aria-pressed={source === "real"} onClick={() => setSource("real")}>Real race</button>
-            <button aria-pressed={source === "demo"} onClick={() => setSource("demo")}>Demo race</button>
+            <button aria-pressed={source === "demo"} onClick={() => setSource("demo")}>Simulated race</button>
           </div>
           {source === "real" && (
             <div className="row" style={{ marginTop: 14 }}>

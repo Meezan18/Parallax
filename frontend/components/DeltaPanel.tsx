@@ -43,7 +43,9 @@ export function DeltaPanel({ frames, startCompound }: { frames: Frame[]; startCo
   const sh = f.focus.shadow;
   const real = f.focus.real;
   const d = sh.delta;
-  const cls = d == null || !sh.active || Math.abs(d) < 0.05 ? "even" : d < 0 ? "ahead" : "behind";
+  const retired = sh.retired || (d == null && sh.active);
+  const lastDelta = [...frames].reverse().find((x) => x.focus.shadow.delta != null)?.focus.shadow.delta ?? null;
+  const cls = retired || d == null || !sh.active || Math.abs(d) < 0.05 ? "even" : d < 0 ? "ahead" : "behind";
   const data = frames.map((x) => ({ lap: x.lap, delta: x.focus.shadow.delta == null ? null : -x.focus.shadow.delta }));
   const plannedStops = sh.pending ? [...sh.stops, sh.pending] : sh.stops;
   const nextPlan = f.plans[0];
@@ -54,10 +56,12 @@ export function DeltaPanel({ frames, startCompound }: { frames: Frame[]; startCo
       <div className="delta-hero">
         <div>
           <div className={`delta-number ${cls}`} aria-live="polite">
-            {sh.active ? `${signed(d == null ? null : -d)}s` : "±0.0s"}
+            {retired ? "DNF" : sh.active ? `${signed(d == null ? null : -d)}s` : "±0.0s"}
           </div>
           <div className="delta-caption">
-            {!sh.active
+            {retired
+              ? `The real ${f.focus.driver} retired, so the AI car stopped with it. Last gap: ${signed(lastDelta == null ? null : -lastDelta)}s.`
+              : !sh.active
               ? "Shadow car is mirroring the real one until the AI takes over."
               : cls === "ahead"
                 ? `The AI's ${f.focus.driver} is ahead of the real one.`

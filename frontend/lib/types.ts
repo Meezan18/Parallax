@@ -138,6 +138,8 @@ export interface Summary {
   actual_position: number | null;
   shadow_stops: StopInfo[];
   actual_stops: StopInfo[];
+  retired?: boolean;
+  last_lap?: number | null;
 }
 
 export interface ChatEntry {

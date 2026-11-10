@@ -4,7 +4,7 @@ Used for two things:
   * tests: the true tyre parameters are known, so we can check the model recovers them
   * offline demo: the app works without network access or FastF1 downloads
 
-All drivers and teams are fictional.
+Real 2026 driver and team names, simulated results: the race itself is invented.
 """
 from __future__ import annotations
 
@@ -12,18 +12,26 @@ import random
 
 from .schemas import Driver, Lap, RaceData
 
+# The 2026 grid. Pace order is shuffled by the seed, so results are invented and imply
+# nothing about real performance. Team colours are approximations.
 TEAMS = [
-    ("Apex Racing", "#E10600"), ("Northline", "#1E41FF"), ("Verdant GP", "#00A19C"),
-    ("Solaris", "#FF8700"), ("Ironbark", "#6CD3BF"), ("Kestrel", "#2293D1"),
-    ("Halcyon", "#B6BABD"), ("Tidewater", "#5E8FAA"), ("Cobalt Works", "#C92D4B"),
-    ("Ember", "#F596C8"),
+    ("McLaren", "#FF8000"), ("Mercedes", "#27F4D2"), ("Red Bull Racing", "#3671C6"),
+    ("Ferrari", "#E8002D"), ("Williams", "#64C4FF"), ("Racing Bulls", "#6692FF"),
+    ("Aston Martin", "#229971"), ("Haas", "#B6BABD"), ("Audi", "#F50537"),
+    ("Alpine", "#FF87BC"), ("Cadillac", "#A8A9AD"),
 ]
 DRIVERS = [
-    ("ARN", "Aron Lind"), ("BAS", "Bastien Moreau"), ("CAL", "Cal Okafor"), ("DUV", "Dario Duval"),
-    ("ESK", "Esko Virtanen"), ("FAR", "Farah Haddad"), ("GRA", "Gray Whitlock"), ("HOL", "Holm Stenberg"),
-    ("IVA", "Ivan Petrov"), ("JUN", "Jun Takeda"), ("KAI", "Kai Mendes"), ("LAR", "Lars Brekke"),
-    ("MAT", "Mateo Rios"), ("NOV", "Noa Novak"), ("OKO", "Obi Okonkwo"), ("PAL", "Pia Palmer"),
-    ("QUI", "Quinn Avery"), ("ROS", "Rosa Albescu"), ("SAN", "Sander Holt"), ("TAV", "Tavi Reyes"),
+    ("NOR", "Lando Norris", "4"), ("PIA", "Oscar Piastri", "81"),
+    ("RUS", "George Russell", "63"), ("ANT", "Kimi Antonelli", "12"),
+    ("VER", "Max Verstappen", "1"), ("HAD", "Isack Hadjar", "6"),
+    ("LEC", "Charles Leclerc", "16"), ("HAM", "Lewis Hamilton", "44"),
+    ("ALB", "Alexander Albon", "23"), ("SAI", "Carlos Sainz", "55"),
+    ("LAW", "Liam Lawson", "30"), ("LIN", "Arvid Lindblad", "41"),
+    ("ALO", "Fernando Alonso", "14"), ("STR", "Lance Stroll", "18"),
+    ("OCO", "Esteban Ocon", "31"), ("BEA", "Oliver Bearman", "87"),
+    ("HUL", "Nico Hulkenberg", "27"), ("BOR", "Gabriel Bortoleto", "5"),
+    ("GAS", "Pierre Gasly", "10"), ("COL", "Franco Colapinto", "43"),
+    ("PER", "Sergio Perez", "11"), ("BOT", "Valtteri Bottas", "77"),
 ]
 
 # compound -> (pace offset s, linear deg s/lap, quadratic deg s/lap^2)
@@ -41,9 +49,11 @@ def generate_demo_race(seed: int = 11, total_laps: int = 56) -> RaceData:
     T = total_laps
     base = 91.5
 
-    drivers = [Driver(abbr=a, full_name=n, team=TEAMS[i // 2][0], team_color=TEAMS[i // 2][1],
-                      number=str(i + 2)) for i, (a, n) in enumerate(DRIVERS)]
-    pace = {d.abbr: i * 0.09 + rng.gauss(0, 0.05) for i, d in enumerate(drivers)}
+    drivers = [Driver(abbr=a, full_name=n, team=TEAMS[i // 2][0], team_color=TEAMS[i // 2][1], number=num)
+               for i, (a, n, num) in enumerate(DRIVERS)]
+    grid_order = drivers[:]
+    rng.shuffle(grid_order)
+    pace = {d.abbr: i * 0.09 + rng.gauss(0, 0.05) for i, d in enumerate(grid_order)}
 
     vsc_start = rng.randint(9, 13)
     vsc_laps = {vsc_start, vsc_start + 1}
@@ -59,7 +69,7 @@ def generate_demo_race(seed: int = 11, total_laps: int = 56) -> RaceData:
         lambda: ("HARD", [(rng.randint(30, 38), "MEDIUM")]),
     ]
     plans = {}
-    for i, d in enumerate(drivers):
+    for i, d in enumerate(grid_order):
         start, stops = templates[rng.choice([0, 0, 1, 2, 3, 4]) if i else 0]()
         # opportunists convert a planned stop into a cheap safety-car stop
         new_stops = []
@@ -69,20 +79,21 @@ def generate_demo_race(seed: int = 11, total_laps: int = 56) -> RaceData:
             new_stops.append((lap, comp))
         plans[d.abbr] = (start, dict(new_stops))
 
-    retired = {drivers[16].abbr: 38}
+    retired = {grid_order[16].abbr: 38}
 
-    cum = {d.abbr: i * 0.25 for i, d in enumerate(drivers)}
-    tyre = {d.abbr: [plans[d.abbr][0], 1 + (2 if i < 10 else 0) - 1] for i, d in enumerate(drivers)}
-    stint = {d.abbr: 1 for d in drivers}
-    pitted_last = {d.abbr: None for d in drivers}
+    cum = {d.abbr: i * 0.25 for i, d in enumerate(grid_order)}
+    tyre = {d.abbr: [plans[d.abbr][0], 1 + (2 if i < 10 else 0) - 1] for i, d in enumerate(grid_order)}
+    stint = {d.abbr: 1 for d in grid_order}
+    pitted_last = {d.abbr: None for d in grid_order}
+    stop_mult: dict[str, float] = {}
     laps: list[Lap] = []
 
     for n in range(1, T + 1):
         status = "SC" if n in sc_laps else "VSC" if n in vsc_laps else "GREEN"
         mult = 0.5 if status == "SC" else 0.65 if status == "VSC" else 1.0
-        active = [d for d in drivers if n <= retired.get(d.abbr, T)]
+        active = [d for d in grid_order if n <= retired.get(d.abbr, T)]
         this_lap: dict[str, Lap] = {}
-        for grid, d in enumerate(drivers):
+        for grid, d in enumerate(grid_order):
             if d not in active:
                 continue
             a = d.abbr
@@ -105,8 +116,9 @@ def generate_demo_race(seed: int = 11, total_laps: int = 56) -> RaceData:
             if pit_in:
                 t += TRUE_PIT_LOSS * mult * 0.35 + rng.gauss(0, 0.3)
                 pitted_last[a] = plans[a][1][n]
+                stop_mult[a] = mult  # the whole stop is priced at the in-lap's track status
             if pit_out:
-                t += TRUE_PIT_LOSS * mult * 0.65 + rng.gauss(0, 0.3)
+                t += TRUE_PIT_LOSS * stop_mult.pop(a, mult) * 0.65 + rng.gauss(0, 0.3)
             cum[a] += t
             this_lap[a] = Lap(driver=a, lap=n, lap_time=t, compound=comp, tyre_life=age, stint=stint[a],
                               pit_in=pit_in, pit_out=pit_out, position=None, track_status=status,
@@ -127,5 +139,5 @@ def generate_demo_race(seed: int = 11, total_laps: int = 56) -> RaceData:
             this_lap[a].position = pos
         laps.extend(this_lap.values())
 
-    return RaceData(year=2026, round=0, event="Demo Grand Prix (synthetic)", circuit="Demo Circuit",
+    return RaceData(year=2026, round=0, event="Parallax Grand Prix (simulated)", circuit="Simulated circuit",
                     total_laps=T, drivers=drivers, laps=laps, source="synthetic")

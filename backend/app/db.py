@@ -8,7 +8,7 @@ from sqlalchemy import (JSON, Boolean, DateTime, Float, ForeignKey, Integer, Str
                         UniqueConstraint, create_engine)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./undercut.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./parallax.db")
 
 engine = create_engine(
     DATABASE_URL,

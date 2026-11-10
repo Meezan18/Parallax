@@ -2,20 +2,20 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: undercut
-      POSTGRES_PASSWORD: undercut
-      POSTGRES_DB: undercut
+      POSTGRES_USER: parallax
+      POSTGRES_PASSWORD: parallax
+      POSTGRES_DB: parallax
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U undercut"]
+      test: ["CMD-SHELL", "pg_isready -U parallax"]
       interval: 3s
       retries: 20
 
   api:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql+psycopg://undercut:undercut@db:5432/undercut
+      DATABASE_URL: postgresql+psycopg://parallax:parallax@db:5432/parallax
       ALLOWED_ORIGINS: http://localhost:3000
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:

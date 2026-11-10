@@ -1,8 +1,10 @@
-# UNDERCUT
+<p align="center"><img src="docs/logo.svg" alt="Parallax" width="360"></p>
+
+# Parallax
 
 **An AI pit wall that races its own strategy against the real Formula 1 race.**
 
-Pick a Grand Prix and a driver. UNDERCUT replays the race lap by lap from real FastF1 timing data. Next to the real car it runs a *shadow car*: the same driver in the same race, with the AI making every strategy call live. It only uses what it has seen so far, so it has no hindsight.
+Pick a Grand Prix and a driver. Parallax replays the race lap by lap from real FastF1 timing data. Next to the real car it runs a *shadow car*: the same driver in the same race, with the AI making every strategy call live. It only uses what it has seen so far, so it has no hindsight.
 
 You see, in real time:
 
@@ -13,6 +15,10 @@ You see, in real time:
 - **What-if mode.** Set your own stops, or let the AI take over from any lap, and see how that call would have played out.
 
 ![Live dashboard](docs/dashboard.png)
+
+The opening title card: the two purple layers slide out from behind the white one, like parallax layers moving at different speeds.
+
+![Intro](docs/intro.png)
 
 > Unofficial project, not associated with Formula 1 or the FIA. Timing data comes from the open-source [FastF1](https://github.com/theOehrly/Fast-F1) library.
 
@@ -70,6 +76,10 @@ shadow_lap = real_clean_lap + [model(shadow tyre) − model(real tyre)] + shadow
 
 So the delta isolates the strategy decision itself. As a sanity check, feeding the shadow car the driver's real strategy reproduces the real result to within a second or two (`test_shadow_with_real_strategy_tracks_reality`).
 
+### Simulated race
+
+The offline race uses the real 2026 grid (11 teams, 22 drivers). The race itself is generated: pace order, strategies, a VSC, a safety car and a retirement are all randomised from a fixed seed, so the results mean nothing about real performance. The app labels it "Simulated" everywhere it appears. Because its tyre physics are known exactly, it doubles as the test fixture.
+
 ### 6. Race engineer (`engine/engineer.py`)
 
 A deterministic intent matcher answers questions directly from the live race state: leader, flags, gaps, positions, tyres, plan, undercut, shadow car, stops, fastest lap. Answers are instant and always grounded in data. If `ANTHROPIC_API_KEY` is set, questions it doesn't understand go to an LLM together with the race state as context.
@@ -84,7 +94,7 @@ A deterministic intent matcher answers questions directly from the live race sta
 docker compose up --build
 ```
 
-Open http://localhost:3000. Pick **Demo race** for an instant offline run, or pick a real season and Grand Prix. The first load of a real race downloads timing data and takes about a minute. After that it's cached in PostgreSQL.
+Open http://localhost:3000. Pick **Simulated race** for an instant offline run, or pick a real season and Grand Prix. The first load of a real race downloads timing data and takes about a minute. After that it's cached in PostgreSQL.
 
 ### Locally
 
